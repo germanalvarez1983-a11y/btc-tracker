@@ -6,25 +6,8 @@ import {
 
 const MONTHS_ES = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
 
-const initialData = [
-  { id: 1, date: "2024-01-15", arsInvested: 150000, btcPrice: 42000, usdRate: 800 },
-  { id: 2, date: "2024-02-15", arsInvested: 150000, btcPrice: 52000, usdRate: 850 },
-  { id: 3, date: "2024-03-15", arsInvested: 150000, btcPrice: 71000, usdRate: 900 },
-  { id: 4, date: "2024-04-15", arsInvested: 150000, btcPrice: 64000, usdRate: 950 },
-  { id: 5, date: "2024-05-15", arsInvested: 150000, btcPrice: 61000, usdRate: 1000 },
-  { id: 6, date: "2024-06-15", arsInvested: 150000, btcPrice: 63000, usdRate: 1050 },
-  { id: 7, date: "2024-07-15", arsInvested: 150000, btcPrice: 66000, usdRate: 1100 },
-  { id: 8, date: "2024-08-15", arsInvested: 150000, btcPrice: 59000, usdRate: 1150 },
-  { id: 9, date: "2024-09-15", arsInvested: 150000, btcPrice: 63000, usdRate: 1200 },
-  { id: 10, date: "2024-10-15", arsInvested: 150000, btcPrice: 68000, usdRate: 1250 },
-  { id: 11, date: "2024-11-15", arsInvested: 150000, btcPrice: 91000, usdRate: 1300 },
-  { id: 12, date: "2024-12-15", arsInvested: 150000, btcPrice: 97000, usdRate: 1350 },
-];
-
-const initialCocos = [
-  { id: 1, date: "2024-01-20", ticker: "AL30", arsInvested: 200000, priceBought: 35000, quantity: 5.71 },
-  { id: 2, date: "2024-02-25", ticker: "YPFD", arsInvested: 150000, priceBought: 18000, quantity: 8.33 },
-];
+const initialData = [];
+const initialCocos = [];
 
 const BTC_CURRENT_PRICE = 0;
 
@@ -54,8 +37,22 @@ const CustomTooltip = ({ active, payload, label }) => {
 };
 
 export default function BTCTracker() {
-  const [purchases, setPurchases] = useState(initialData);
-  const [cocosInvestments, setCocosInvestments] = useState(initialCocos);
+  const [purchases, setPurchases] = useState(() => {
+    const saved = localStorage.getItem("btc-tracker-purchases");
+    return saved ? JSON.parse(saved) : initialData;
+  });
+  const [cocosInvestments, setCocosInvestments] = useState(() => {
+    const saved = localStorage.getItem("btc-tracker-cocos");
+    return saved ? JSON.parse(saved) : initialCocos;
+  });
+
+  useEffect(() => {
+    localStorage.setItem("btc-tracker-purchases", JSON.stringify(purchases));
+  }, [purchases]);
+
+  useEffect(() => {
+    localStorage.setItem("btc-tracker-cocos", JSON.stringify(cocosInvestments));
+  }, [cocosInvestments]);
   const [tab, setTab] = useState("dashboard");
   const [showModal, setShowModal] = useState(false);
   const [showCocosModal, setShowCocosModal] = useState(false);
@@ -199,7 +196,7 @@ export default function BTCTracker() {
     setCocosInvestments(prev => prev.filter(p => p.id !== id));
   }
 
-  // UPDATED DESIGN (Light Mode)
+  // UPDATED DESIGN WITH MOBILE RESPONSIVENESS
   const s = {
     app: {
       minHeight: "100vh", background: "#f8fafc",
@@ -256,10 +253,10 @@ export default function BTCTracker() {
     }),
     content: { padding: "32px", maxWidth: 1400, margin: "0 auto" },
     grid4: {
-      display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: 16, marginBottom: 24,
+      display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 16, marginBottom: 24,
     },
     grid2: {
-      display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(400px, 1fr))", gap: 16, marginBottom: 24,
+      display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16, marginBottom: 24,
     },
     card: {
       background: "#fff", border: "1px solid #e2e8f0",
@@ -289,6 +286,7 @@ export default function BTCTracker() {
       borderRadius: 8, cursor: "pointer", fontWeight: 700,
       fontSize: 12, letterSpacing: 1, fontFamily: "inherit",
       boxShadow: "0 4px 6px rgba(234, 88, 12, 0.2)",
+      whiteSpace: "nowrap"
     },
     addCocosBtn: {
       background: "linear-gradient(135deg, #0ea5e9, #2563eb)",
@@ -296,8 +294,9 @@ export default function BTCTracker() {
       borderRadius: 8, cursor: "pointer", fontWeight: 700,
       fontSize: 12, letterSpacing: 1, fontFamily: "inherit",
       boxShadow: "0 4px 6px rgba(37, 99, 235, 0.2)",
+      whiteSpace: "nowrap"
     },
-    table: { width: "100%", borderCollapse: "collapse" },
+    table: { width: "100%", borderCollapse: "collapse", minWidth: 600 },
     th: {
       textAlign: "left", padding: "12px 14px",
       fontSize: 11, color: "#64748b", letterSpacing: 1, fontWeight: 700,
@@ -318,11 +317,13 @@ export default function BTCTracker() {
       position: "fixed", inset: 0, background: "rgba(15, 23, 42, 0.6)",
       display: "flex", alignItems: "center", justifyContent: "center",
       zIndex: 1000, backdropFilter: "blur(4px)",
+      padding: 16,
     },
     modalBox: {
       background: "#fff", border: "1px solid #e2e8f0",
-      borderRadius: 16, padding: "32px", minWidth: 400,
+      borderRadius: 16, padding: "32px", width: "100%", maxWidth: 450,
       boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1)",
+      maxHeight: "90vh", overflowY: "auto",
     },
     input: {
       width: "100%", background: "#f8fafc", border: "1px solid #cbd5e1",
@@ -358,45 +359,53 @@ export default function BTCTracker() {
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
         @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
         input:focus { border-color: #3b82f6 !important; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2); }
+        
+        /* RESPONSIVE QUERIES */
+        @media (max-width: 768px) {
+          .app-header { flex-direction: column !important; padding: 16px !important; gap: 16px !important; }
+          .app-nav { width: 100% !important; justify-content: center !important; flex-wrap: wrap !important; }
+          .price-bar { width: 100% !important; justify-content: space-between !important; overflow-x: auto; padding-bottom: 8px; }
+          .app-content { padding: 16px !important; }
+          .grid-4, .grid-2 { grid-template-columns: 1fr !important; }
+          .title-bar { flex-direction: column !important; align-items: flex-start !important; gap: 12px !important; }
+          .title-bar button { width: 100% !important; }
+          .table-wrapper { overflow-x: auto !important; width: 100% !important; -webkit-overflow-scrolling: touch; }
+          .modal-box { padding: 20px !important; }
+          .stat-card { padding: 16px !important; }
+        }
       `}</style>
       
       {/* HEADER */}
-      <header style={s.header}>
+      <header style={s.header} className="app-header">
         <div style={s.logo}>
           <div style={s.logoIcon}>₿</div>
           <span style={s.logoText}>PORTFOLIO TRACKER</span>
         </div>
-        <nav style={s.nav}>
+        <nav style={s.nav} className="app-nav">
           {["dashboard","compras BTC","cocos", "graficos"].map(t => (
             <button key={t} style={s.navBtn(tab === t)} onClick={() => setTab(t)}>
               {t.toUpperCase()}
             </button>
           ))}
         </nav>
-        <div style={s.priceBar}>
-          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+        <div style={s.priceBar} className="price-bar">
+          <div style={{ display: "flex", alignItems: "center", gap: 6, minWidth: "max-content" }}>
             <span style={s.statusDot(priceStatus)} />
             <span style={{ fontSize: 10, color: "#64748b", letterSpacing: 0.5, fontWeight: 600 }}>
               {priceStatus === "live" ? (lastUpdated ? `${lastUpdated.toLocaleTimeString("es-AR")}` : "LIVE") : priceStatus === "loading" ? "ACTUALIZANDO..." : "ERROR"}
             </span>
           </div>
-          <div style={s.priceChip("#f59e0b")}>
-            <span style={s.priceLabel}>BTC / USDT</span>
+          <div style={{...s.priceChip("#f59e0b"), minWidth: "max-content"}}>
+            <span style={s.priceLabel}>BTC</span>
             <span style={s.priceValue("#ea580c")}>
               {btcPrice > 0 ? "$" + btcPrice.toLocaleString("es-AR", { maximumFractionDigits: 0 }) : "—"}
             </span>
-            {btcChange24h !== 0 && (
-              <span style={s.priceSub(btcChange24h >= 0)}>
-                {btcChange24h >= 0 ? "▲" : "▼"} {Math.abs(btcChange24h).toFixed(2)}% 24h
-              </span>
-            )}
           </div>
-          <div style={s.priceChip("#0ea5e9")}>
-            <span style={s.priceLabel}>USDT / ARS</span>
+          <div style={{...s.priceChip("#0ea5e9"), minWidth: "max-content"}}>
+            <span style={s.priceLabel}>USDT</span>
             <span style={s.priceValue("#0284c7")}>
-              {usdtArs > 0 ? "$ " + usdtArs.toLocaleString("es-AR", { maximumFractionDigits: 0 }) : "—"}
+              {usdtArs > 0 ? "$" + usdtArs.toLocaleString("es-AR", { maximumFractionDigits: 0 }) : "—"}
             </span>
-            <span style={{ fontSize: 10, color: "#64748b", fontWeight: 500 }}>dólar cripto</span>
           </div>
           <button
             onClick={fetchPrices}
@@ -406,13 +415,13 @@ export default function BTCTracker() {
         </div>
       </header>
 
-      <div style={s.content}>
+      <div style={s.content} className="app-content">
 
         {/* DASHBOARD */}
         {tab === "dashboard" && (
           <>
             <div style={s.sectionTitle}><span style={{ color: "#3b82f6" }}>◈</span> RESUMEN GLOBAL</div>
-            <div style={s.grid4}>
+            <div style={s.grid4} className="grid-4">
               {[
                 { label: "PATRIMONIO ESTIMADO", value: fmtARS(currentValueUSD * usdtArs + totalCocosARS), sub: fmtUSD(currentValueUSD + (totalCocosARS / (usdtArs || 1200))), accent: "#3b82f6" },
                 { label: "BTC VALOR ACTUAL", value: fmtUSD(currentValueUSD), sub: fmt(totalBTC, 6) + " ₿", accent: "#f59e0b" },
@@ -424,7 +433,7 @@ export default function BTCTracker() {
                   accent: isPnlPos ? "#16a34a" : "#dc2626"
                 },
               ].map((c, i) => (
-                <div key={i} style={s.statCard(c.accent)}>
+                <div key={i} style={s.statCard(c.accent)} className="stat-card">
                   <div style={s.statLabel}>{c.label}</div>
                   <div style={s.statValue()}>{c.value}</div>
                   <div style={{...s.statSub, color: c.accent}}>{c.sub}</div>
@@ -433,14 +442,14 @@ export default function BTCTracker() {
             </div>
 
             <div style={s.sectionTitle}><span style={{ color: "#f59e0b" }}>◈</span> MÉTRICAS BITCOIN</div>
-            <div style={s.grid4}>
+            <div style={s.grid4} className="grid-4">
               {[
                 { label: "PRECIO PROMEDIO COMPRA", value: fmtUSD(avgBuyPrice), sub: "weighted avg", accent: "#8b5cf6" },
                 { label: "VALOR INVERTIDO BTC", value: fmtUSD(totalUSDInvested), sub: fmtARS(totalARS) + " (histórico)", accent: "#f59e0b" },
                 { label: "MÚLTIPLO DE RETORNO", value: currentValueUSD > 0 ? fmt(currentValueUSD / totalUSDInvested, 2) + "x" : "—", sub: "retorno sobre invertido", accent: "#10b981" },
                 { label: "USDT / ARS (HOY)", value: usdtArs > 0 ? "$ " + usdtArs.toLocaleString("es-AR", { maximumFractionDigits: 0 }) : "—", sub: "dólar cripto Binance", accent: "#0ea5e9" },
               ].map((c, i) => (
-                <div key={i} style={s.statCard(c.accent)}>
+                <div key={i} style={s.statCard(c.accent)} className="stat-card">
                   <div style={s.statLabel}>{c.label}</div>
                   <div style={s.statValue()}>{c.value}</div>
                   <div style={s.statSub}>{c.sub}</div>
@@ -449,8 +458,8 @@ export default function BTCTracker() {
             </div>
 
             {/* Mini chart */}
-            <div style={s.card}>
-              <div style={s.sectionTitle}>
+            <div style={{...s.card, padding: "20px 10px 10px 10px"}}>
+              <div style={{...s.sectionTitle, paddingLeft: 10}}>
                 <span style={{ color: "#f59e0b" }}>◈</span> EVOLUCIÓN DEL PORTAFOLIO BTC (USD)
               </div>
               <ResponsiveContainer width="100%" height={280}>
@@ -462,11 +471,11 @@ export default function BTCTracker() {
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
-                  <XAxis dataKey="label" tick={{ fill: "#64748b", fontSize: 11, fontWeight: 600 }} axisLine={false} tickLine={false} dy={10} />
-                  <YAxis tick={{ fill: "#64748b", fontSize: 11, fontWeight: 600 }} axisLine={false} tickLine={false} tickFormatter={v => "$" + (v/1000).toFixed(0) + "k"} dx={-10} />
+                  <XAxis dataKey="label" tick={{ fill: "#64748b", fontSize: 11, fontWeight: 600 }} axisLine={false} tickLine={false} dy={10} minTickGap={20} />
+                  <YAxis tick={{ fill: "#64748b", fontSize: 11, fontWeight: 600 }} axisLine={false} tickLine={false} tickFormatter={v => "$" + (v/1000).toFixed(0) + "k"} dx={-10} width={45} />
                   <Tooltip content={<CustomTooltip />} />
                   <Area type="monotone" dataKey="currentValueUSD" name="Valor USD" stroke="#ea580c" fill="url(#gVal)" strokeWidth={3} activeDot={{ r: 6, fill: "#ea580c", stroke: "#fff", strokeWidth: 2 }} />
-                  <ReferenceLine y={totalUSDInvested} stroke="#3b82f6" strokeDasharray="4 4" label={{ position: "insideTopLeft", value: "Costo Invertido", fill: "#3b82f6", fontSize: 12, fontWeight: 700 }} />
+                  <ReferenceLine y={totalUSDInvested} stroke="#3b82f6" strokeDasharray="4 4" label={{ position: "insideTopLeft", value: "Costo Invertido", fill: "#3b82f6", fontSize: 11, fontWeight: 700 }} />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
@@ -476,45 +485,47 @@ export default function BTCTracker() {
         {/* COMPRAS BTC */}
         {tab === "compras BTC" && (
           <>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-              <div style={s.sectionTitle}><span style={{ color: "#f59e0b" }}>◈</span> REGISTRO DE COMPRAS BITCOIN</div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }} className="title-bar">
+              <div style={{...s.sectionTitle, marginBottom: 0}}><span style={{ color: "#f59e0b" }}>◈</span> REGISTRO DE COMPRAS BITCOIN</div>
               <button style={s.addBtn} onClick={() => { setEditId(null); setForm({ date: "", arsInvested: 150000, btcPrice: "", usdRate: "" }); setShowModal(true); }}>
                 + NUEVA COMPRA BTC
               </button>
             </div>
-            <div style={s.card}>
-              <table style={s.table}>
-                <thead>
-                  <tr>
-                    {["FECHA","ARS INVERTIDO","T/C USD","USD INVERTIDO","PRECIO BTC","BTC COMPRADO","BTC ACUM.","VALOR HOY","P&L",""].map((h,i) => (
-                      <th key={i} style={s.th}>{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {enriched.map((p, i) => {
-                    const pnl = p.btcBought * btcPrice - p.usdInvested;
-                    const pos = pnl >= 0;
-                    return (
-                      <tr key={p.id} style={{ background: i % 2 === 0 ? "#f8fafc" : "#ffffff" }}>
-                        <td style={{ ...s.td, color: "#1e293b", fontWeight: 700 }}>{p.label}</td>
-                        <td style={s.td}>{fmtARS(p.arsInvested)}</td>
-                        <td style={s.td}>{fmt(p.usdRate, 0)}</td>
-                        <td style={{ ...s.td, fontWeight: 700 }}>{fmtUSD(p.usdInvested)}</td>
-                        <td style={s.td}>{fmtUSD(p.btcPrice)}</td>
-                        <td style={{ ...s.td, color: "#3b82f6", fontWeight: 700 }}>{fmt(p.btcBought, 6)} ₿</td>
-                        <td style={{ ...s.td, color: "#8b5cf6", fontWeight: 700 }}>{fmt(p.cumBTC, 6)} ₿</td>
-                        <td style={s.td}>{fmtUSD(p.btcBought * btcPrice)}</td>
-                        <td style={s.td}><span style={s.badge(pos)}>{pos ? "+" : ""}{fmtUSD(pnl)}</span></td>
-                        <td style={s.td}>
-                          <button style={{ ...s.iconBtn, color: "#3b82f6" }} onClick={() => startEdit(p)}>✎</button>
-                          <button style={{ ...s.iconBtn, color: "#dc2626" }} onClick={() => deletePurchase(p.id)}>✕</button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+            <div style={{...s.card, padding: 0, overflow: "hidden"}}>
+              <div className="table-wrapper">
+                <table style={s.table}>
+                  <thead>
+                    <tr>
+                      {["FECHA","ARS INVERTIDO","T/C USD","USD INVERTIDO","PRECIO BTC","BTC COMPRADO","BTC ACUM.","VALOR HOY","P&L",""].map((h,i) => (
+                        <th key={i} style={s.th}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {enriched.map((p, i) => {
+                      const pnl = p.btcBought * btcPrice - p.usdInvested;
+                      const pos = pnl >= 0;
+                      return (
+                        <tr key={p.id} style={{ background: i % 2 === 0 ? "#f8fafc" : "#ffffff" }}>
+                          <td style={{ ...s.td, color: "#1e293b", fontWeight: 700 }}>{p.label}</td>
+                          <td style={s.td}>{fmtARS(p.arsInvested)}</td>
+                          <td style={s.td}>{fmt(p.usdRate, 0)}</td>
+                          <td style={{ ...s.td, fontWeight: 700 }}>{fmtUSD(p.usdInvested)}</td>
+                          <td style={s.td}>{fmtUSD(p.btcPrice)}</td>
+                          <td style={{ ...s.td, color: "#3b82f6", fontWeight: 700 }}>{fmt(p.btcBought, 6)} ₿</td>
+                          <td style={{ ...s.td, color: "#8b5cf6", fontWeight: 700 }}>{fmt(p.cumBTC, 6)} ₿</td>
+                          <td style={s.td}>{fmtUSD(p.btcBought * btcPrice)}</td>
+                          <td style={s.td}><span style={s.badge(pos)}>{pos ? "+" : ""}{fmtUSD(pnl)}</span></td>
+                          <td style={s.td}>
+                            <button style={{ ...s.iconBtn, color: "#3b82f6" }} onClick={() => startEdit(p)}>✎</button>
+                            <button style={{ ...s.iconBtn, color: "#dc2626" }} onClick={() => deletePurchase(p.id)}>✕</button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </>
         )}
@@ -522,49 +533,51 @@ export default function BTCTracker() {
         {/* COCOS CAPITAL */}
         {tab === "cocos" && (
           <>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-              <div style={s.sectionTitle}><span style={{ color: "#0ea5e9" }}>◈</span> PORTAFOLIO COCOS CAPITAL</div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }} className="title-bar">
+              <div style={{...s.sectionTitle, marginBottom: 0}}><span style={{ color: "#0ea5e9" }}>◈</span> PORTAFOLIO COCOS CAPITAL</div>
               <button style={s.addCocosBtn} onClick={() => { setCocosEditId(null); setCocosForm({ date: "", ticker: "", arsInvested: "", priceBought: "" }); setShowCocosModal(true); }}>
                 + NUEVA TRANSACCIÓN COCOS
               </button>
             </div>
             
-            <div style={s.grid4}>
-              <div style={s.statCard("#0ea5e9")}>
+            <div style={s.grid4} className="grid-4">
+              <div style={s.statCard("#0ea5e9")} className="stat-card">
                 <div style={s.statLabel}>TOTAL INVERTIDO EN COCOS</div>
                 <div style={s.statValue()}>{fmtARS(totalCocosARS)}</div>
                 <div style={{...s.statSub, color: "#0ea5e9"}}>{cocosInvestments.length} compras en cartera</div>
               </div>
             </div>
 
-            <div style={s.card}>
-              <table style={s.table}>
-                <thead>
-                  <tr>
-                    {["FECHA","TICKER (ACTIVO)","ARS INVERTIDO","PRECIO COMPRA (ARS)","CANTIDAD APROX.",""].map((h,i) => (
-                      <th key={i} style={s.th}>{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {cocosEnriched.length === 0 && (
-                    <tr><td colSpan={6} style={{ textAlign: "center", padding: 30, color: "#94a3b8" }}>No hay inversiones en Cocos todavía.</td></tr>
-                  )}
-                  {cocosEnriched.map((p, i) => (
-                    <tr key={p.id} style={{ background: i % 2 === 0 ? "#f8fafc" : "#ffffff" }}>
-                      <td style={{ ...s.td, color: "#1e293b", fontWeight: 700 }}>{p.date}</td>
-                      <td style={{ ...s.td, color: "#0ea5e9", fontWeight: 800 }}>{p.ticker}</td>
-                      <td style={{...s.td, fontWeight: 700}}>{fmtARS(p.arsInvested)}</td>
-                      <td style={s.td}>{fmtARS(p.priceBought)}</td>
-                      <td style={s.td}>{fmt(p.quantity, 4)} unidades</td>
-                      <td style={s.td}>
-                        <button style={{ ...s.iconBtn, color: "#3b82f6" }} onClick={() => startCocosEdit(p)}>✎</button>
-                        <button style={{ ...s.iconBtn, color: "#dc2626" }} onClick={() => deleteCocosPurchase(p.id)}>✕</button>
-                      </td>
+            <div style={{...s.card, padding: 0, overflow: "hidden"}}>
+              <div className="table-wrapper">
+                <table style={s.table}>
+                  <thead>
+                    <tr>
+                      {["FECHA","TICKER (ACTIVO)","ARS INVERTIDO","PRECIO COMPRA","CANTIDAD APROX.",""].map((h,i) => (
+                        <th key={i} style={s.th}>{h}</th>
+                      ))}
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {cocosEnriched.length === 0 && (
+                      <tr><td colSpan={6} style={{ textAlign: "center", padding: 30, color: "#94a3b8" }}>No hay inversiones en Cocos todavía.</td></tr>
+                    )}
+                    {cocosEnriched.map((p, i) => (
+                      <tr key={p.id} style={{ background: i % 2 === 0 ? "#f8fafc" : "#ffffff" }}>
+                        <td style={{ ...s.td, color: "#1e293b", fontWeight: 700 }}>{p.date}</td>
+                        <td style={{ ...s.td, color: "#0ea5e9", fontWeight: 800 }}>{p.ticker}</td>
+                        <td style={{...s.td, fontWeight: 700}}>{fmtARS(p.arsInvested)}</td>
+                        <td style={s.td}>{fmtARS(p.priceBought)}</td>
+                        <td style={s.td}>{fmt(p.quantity, 4)} unidades</td>
+                        <td style={s.td}>
+                          <button style={{ ...s.iconBtn, color: "#3b82f6" }} onClick={() => startCocosEdit(p)}>✎</button>
+                          <button style={{ ...s.iconBtn, color: "#dc2626" }} onClick={() => deleteCocosPurchase(p.id)}>✕</button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </>
         )}
@@ -572,9 +585,9 @@ export default function BTCTracker() {
         {/* GRAFICOS */}
         {tab === "graficos" && (
           <>
-            <div style={s.grid2}>
-              <div style={s.card}>
-                <div style={s.sectionTitle}><span style={{ color: "#f59e0b" }}>◈</span> BTC ACUMULADO</div>
+            <div style={s.grid2} className="grid-2">
+              <div style={{...s.card, padding: "20px 10px 10px 10px"}}>
+                <div style={{...s.sectionTitle, paddingLeft: 10}}><span style={{ color: "#f59e0b" }}>◈</span> BTC ACUMULADO</div>
                 <ResponsiveContainer width="100%" height={260}>
                   <AreaChart data={enriched}>
                     <defs>
@@ -584,20 +597,20 @@ export default function BTCTracker() {
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
-                    <XAxis dataKey="label" tick={{ fill: "#64748b", fontSize: 10, fontWeight: 500 }} axisLine={false} tickLine={false} dy={10} />
-                    <YAxis tick={{ fill: "#64748b", fontSize: 10, fontWeight: 500 }} axisLine={false} tickLine={false} />
+                    <XAxis dataKey="label" tick={{ fill: "#64748b", fontSize: 10, fontWeight: 500 }} axisLine={false} tickLine={false} dy={10} minTickGap={20} />
+                    <YAxis tick={{ fill: "#64748b", fontSize: 10, fontWeight: 500 }} axisLine={false} tickLine={false} width={40} />
                     <Tooltip content={<CustomTooltip />} />
                     <Area type="monotone" dataKey="cumBTC" name="BTC Acum." stroke="#ea580c" fill="url(#gBTC)" strokeWidth={3} activeDot={{ r: 5 }} />
                   </AreaChart>
                 </ResponsiveContainer>
               </div>
-              <div style={s.card}>
-                <div style={s.sectionTitle}><span style={{ color: "#8b5cf6" }}>◈</span> PRECIO PROMEDIO DE COMPRA</div>
+              <div style={{...s.card, padding: "20px 10px 10px 10px"}}>
+                <div style={{...s.sectionTitle, paddingLeft: 10}}><span style={{ color: "#8b5cf6" }}>◈</span> PRECIO PROMEDIO DE COMPRA</div>
                 <ResponsiveContainer width="100%" height={260}>
                   <LineChart data={enriched}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
-                    <XAxis dataKey="label" tick={{ fill: "#64748b", fontSize: 10, fontWeight: 500 }} axisLine={false} tickLine={false} dy={10} />
-                    <YAxis tick={{ fill: "#64748b", fontSize: 10, fontWeight: 500 }} axisLine={false} tickLine={false} tickFormatter={v => "$" + (v/1000).toFixed(0) + "k"} />
+                    <XAxis dataKey="label" tick={{ fill: "#64748b", fontSize: 10, fontWeight: 500 }} axisLine={false} tickLine={false} dy={10} minTickGap={20} />
+                    <YAxis tick={{ fill: "#64748b", fontSize: 10, fontWeight: 500 }} axisLine={false} tickLine={false} tickFormatter={v => "$" + (v/1000).toFixed(0) + "k"} width={40} />
                     <Tooltip content={<CustomTooltip />} />
                     <Line type="monotone" dataKey="avgPrice" name="Avg Price" stroke="#8b5cf6" strokeWidth={3} dot={{ fill: "#8b5cf6", r: 4, stroke: "#fff", strokeWidth: 2 }} />
                     <ReferenceLine y={btcPrice} stroke="#f59e0b" strokeDasharray="4 4" label={{ position: "insideBottomLeft", value: "Actual", fill: "#f59e0b", fontSize: 11, fontWeight: 700 }} />
@@ -605,27 +618,27 @@ export default function BTCTracker() {
                 </ResponsiveContainer>
               </div>
             </div>
-            <div style={s.grid2}>
-              <div style={s.card}>
-                <div style={s.sectionTitle}><span style={{ color: "#10b981" }}>◈</span> P&L POR COMPRA (USD)</div>
+            <div style={s.grid2} className="grid-2">
+              <div style={{...s.card, padding: "20px 10px 10px 10px"}}>
+                <div style={{...s.sectionTitle, paddingLeft: 10}}><span style={{ color: "#10b981" }}>◈</span> P&L POR COMPRA (USD)</div>
                 <ResponsiveContainer width="100%" height={240}>
                   <BarChart data={enriched.map(p => ({ ...p, pnlBuy: p.btcBought * btcPrice - p.usdInvested }))}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
-                    <XAxis dataKey="label" tick={{ fill: "#64748b", fontSize: 10, fontWeight: 500 }} axisLine={false} tickLine={false} dy={10} />
-                    <YAxis tick={{ fill: "#64748b", fontSize: 10, fontWeight: 500 }} axisLine={false} tickLine={false} />
+                    <XAxis dataKey="label" tick={{ fill: "#64748b", fontSize: 10, fontWeight: 500 }} axisLine={false} tickLine={false} dy={10} minTickGap={20} />
+                    <YAxis tick={{ fill: "#64748b", fontSize: 10, fontWeight: 500 }} axisLine={false} tickLine={false} width={40} />
                     <Tooltip content={<CustomTooltip />} />
                     <ReferenceLine y={0} stroke="#cbd5e1" />
                     <Bar dataKey="pnlBuy" name="P&L USD" fill="#10b981" radius={[4,4,0,0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
-              <div style={s.card}>
-                <div style={s.sectionTitle}><span style={{ color: "#3b82f6" }}>◈</span> BTC COMPRADO POR MES</div>
+              <div style={{...s.card, padding: "20px 10px 10px 10px"}}>
+                <div style={{...s.sectionTitle, paddingLeft: 10}}><span style={{ color: "#3b82f6" }}>◈</span> BTC COMPRADO POR MES</div>
                 <ResponsiveContainer width="100%" height={240}>
                   <BarChart data={enriched}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
-                    <XAxis dataKey="label" tick={{ fill: "#64748b", fontSize: 10, fontWeight: 500 }} axisLine={false} tickLine={false} dy={10} />
-                    <YAxis tick={{ fill: "#64748b", fontSize: 10, fontWeight: 500 }} axisLine={false} tickLine={false} />
+                    <XAxis dataKey="label" tick={{ fill: "#64748b", fontSize: 10, fontWeight: 500 }} axisLine={false} tickLine={false} dy={10} minTickGap={20} />
+                    <YAxis tick={{ fill: "#64748b", fontSize: 10, fontWeight: 500 }} axisLine={false} tickLine={false} width={40} />
                     <Tooltip content={<CustomTooltip />} />
                     <Bar dataKey="btcBought" name="BTC Comprado" fill="#3b82f6" radius={[4,4,0,0]} />
                   </BarChart>
@@ -639,7 +652,7 @@ export default function BTCTracker() {
       {/* MODAL BTC */}
       {showModal && (
         <div style={s.modal} onClick={e => e.target === e.currentTarget && setShowModal(false)}>
-          <div style={s.modalBox}>
+          <div style={s.modalBox} className="modal-box">
             <div style={{ fontSize: 16, fontWeight: 800, color: "#1e293b", marginBottom: 24, letterSpacing: 1 }}>
               {editId ? "✎ EDITAR COMPRA BTC" : "+ REGISTRAR COMPRA BTC"}
             </div>
@@ -679,7 +692,7 @@ export default function BTCTracker() {
       {/* MODAL COCOS */}
       {showCocosModal && (
         <div style={s.modal} onClick={e => e.target === e.currentTarget && setShowCocosModal(false)}>
-          <div style={s.modalBox}>
+          <div style={s.modalBox} className="modal-box">
             <div style={{ fontSize: 16, fontWeight: 800, color: "#1e293b", marginBottom: 24, letterSpacing: 1 }}>
               {cocosEditId ? "✎ EDITAR TRANSACCIÓN COCOS" : "+ REGISTRAR EN COCOS"}
             </div>
