@@ -1,22 +1,26 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import {
-  AreaChart, Area, LineChart, Line, BarChart, Bar,
+  AreaChart, Area, LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine
 } from "recharts";
 
 const MONTHS_ES = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
 
+let HIDE_BALANCES = false;
 const initialData = [];
 const initialCocos = [];
 
 const BTC_CURRENT_PRICE = 0;
 
+
 function fmt(n, decimals = 2) {
+  if (HIDE_BALANCES) return "* * *";
   return n?.toLocaleString("es-AR", { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
 }
-function fmtUSD(n) { return "$" + fmt(n, 2); }
-function fmtARS(n) { return "ARS " + fmt(n, 0); }
-function fmtBTC(n) { return fmt(n, 8) + " ₿"; }
+function fmtUSD(n) { return HIDE_BALANCES ? "$ * * * *" : "$" + (n||0).toLocaleString("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+function fmtARS(n) { return HIDE_BALANCES ? "ARS * * * *" : "ARS " + (n||0).toLocaleString("es-AR", { minimumFractionDigits: 0, maximumFractionDigits: 0 }); }
+function fmtBTC(n) { return HIDE_BALANCES ? "* * * * ₿" : (n||0).toLocaleString("es-AR", { minimumFractionDigits: 8, maximumFractionDigits: 8 }) + " ₿"; }
+
 
 const CustomTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null;
@@ -88,6 +92,24 @@ export default function BTCTracker() {
   });
   const [editColdTicker, setEditColdTicker] = useState(null);
   const [editColdAmount, setEditColdAmount] = useState("");
+
+  const [hideBalances, setHideBalances] = useState(false);
+  HIDE_BALANCES = hideBalances;
+  const [dashCurrency, setDashCurrency] = useState("ARS");
+  
+  const [netWorthHistory, setNetWorthHistory] = useState(() => {
+    const saved = localStorage.getItem("btc-tracker-nw-history");
+    return saved ? JSON.parse(saved) : [];
+  });
+  
+  const [passiveIncome, setPassiveIncome] = useState(() => {
+    const saved = localStorage.getItem("btc-tracker-passive");
+    return saved ? Number(saved) : 0;
+  });
+
+  useEffect(() => { localStorage.setItem("btc-tracker-nw-history", JSON.stringify(netWorthHistory)); }, [netWorthHistory]);
+  useEffect(() => { localStorage.setItem("btc-tracker-passive", passiveIncome.toString()); }, [passiveIncome]);
+
 
   const [cocosInvestments, setCocosInvestments] = useState(() => {
     const saved = localStorage.getItem("btc-tracker-cocos");
@@ -205,8 +227,31 @@ export default function BTCTracker() {
   const pnlPct = (pnlUSD / totalUSDInvested) * 100;
   const isPnlPos = pnlUSD >= 0;
 
+  
   const totalCocosARS = cocosInvestments.reduce((s, c) => s + Number(c.arsInvested), 0);
+  const totalCocosUSD = totalCocosARS / (usdtArs || 1200);
   const totalColdWalletUSD = Object.keys(coldWallet).reduce((sum, ticker) => sum + (coldWallet[ticker] * cryptoData[ticker].price), 0);
+  
+  const totalNetWorthUSD = currentValueUSD + totalColdWalletUSD + totalCocosUSD + passiveIncome;
+  const totalNetWorthARS = totalNetWorthUSD * usdtArs;
+
+  const takeSnapshot = () => {
+    const today = new Date().toISOString().split("T")[0];
+    if (netWorthHistory.some(h => h.date === today)) {
+      alert("Ya tomaste la fotografía financiera de hoy."); return;
+    }
+    setNetWorthHistory([...netWorthHistory, { date: today, netWorthUSD: totalNetWorthUSD }]);
+  };
+
+  const donutData = [
+    { name: "BTC (Compras)", value: currentValueUSD, color: "#dfb2c4" },
+    { name: "Cocos Capital", value: totalCocosUSD, color: "#a8b6c4" },
+    ...Object.keys(coldWallet).filter(t => coldWallet[t] > 0).map((t, i) => ({
+      name: `Wallet (${t})`, value: coldWallet[t] * cryptoData[t].price, color: ["#c0aab5", "#9fb5a6", "#dbd6d8", "#b8b1b3", "#787073"][i%5]
+    })),
+    ...(passiveIncome > 0 ? [{ name: "Ingresos Pasivos", value: passiveIncome, color: "#a0bfa9" }] : [])
+  ].filter(d => d.value > 0);
+
 
   function saveForm() {
     if (!form.date || !form.btcPrice || !form.usdRate) return;
@@ -451,13 +496,20 @@ export default function BTCTracker() {
           <div style={s.logoIcon}>₿</div>
           <span style={s.logoText}>PORTFOLIO GERMAN</span>
         </div>
-        <nav style={s.nav} className="app-nav">
+        
+        <div style={{display: "flex", gap: 8, alignItems: "center"}}>
+          <button onClick={() => setHideBalances(!hideBalances)} style={{ ...s.iconBtn, fontSize: 18, marginRight: 10 }} title={"Modo Privacidad"}>
+            {hideBalances ? "🙈" : "👁️"}
+          </button>
+          <nav style={s.nav} className="app-nav">
+
           {["dashboard","compras BTC","cocos", "wallet fria", "graficos"].map(t => (
             <button key={t} style={s.navBtn(tab === t)} onClick={() => setTab(t)}>
               {t.toUpperCase()}
             </button>
           ))}
         </nav>
+        </div>
         <div style={s.priceBar} className="price-bar">
           <div style={{ display: "flex", alignItems: "center", gap: 4, minWidth: "max-content" }}>
             <span style={s.statusDot(priceStatus)} title={lastUpdated ? "Última act: " + lastUpdated.toLocaleTimeString("es-AR") : ""} />
@@ -500,18 +552,40 @@ export default function BTCTracker() {
         {/* DASHBOARD */}
         {tab === "dashboard" && (
           <>
-            <div style={s.sectionTitle}><span style={{ color: "#a29ea8" }}>◈</span> RESUMEN GLOBAL</div>
+            
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }} className="title-bar">
+              <div style={s.sectionTitle}><span style={{ color: "#a29ea8" }}>◈</span> RESUMEN GLOBAL</div>
+              <div style={{ display: "flex", gap: 10 }}>
+                <button style={{...s.addBtn, background: "linear-gradient(135deg, #a8b6c4, #89858f)"}} onClick={() => setDashCurrency(c => c === "ARS" ? "USD" : "ARS")}>
+                  VER EN {dashCurrency === "ARS" ? "USD" : "ARS"}
+                </button>
+                <button style={{...s.addCocosBtn, background: "linear-gradient(135deg, #dfb2c4, #c98298)"}} onClick={takeSnapshot}>
+                  📸 FOTO DEL MES
+                </button>
+              </div>
+            </div>
+
+            {/* PROGRESS BAR 100K GOAL */}
+            <div style={{ background: "#fff", padding: "16px 24px", borderRadius: 12, border: "1px solid #ece9ea", marginBottom: 24, boxShadow: "0 2px 4px rgba(0,0,0,0.02)" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, fontWeight: 800, color: "#968f92", marginBottom: 8, letterSpacing: 1 }}>
+                <span>PROGRESO META: <div style={s.sectionTitle}><span style={{ color: "#dfb2c4" }}>◈</span> MÉTRICAS BITCOIN</div>00.000 USD</span>
+                <span>{fmt((totalNetWorthUSD / 100000) * 100, 1)}%</span>
+              </div>
+              <div style={{ width: "100%", height: 10, background: "#ece9ea", borderRadius: 5, overflow: "hidden" }}>
+                <div style={{ height: "100%", width: `${Math.min((totalNetWorthUSD / 100000) * 100, 100)}%`, background: "linear-gradient(90deg, #dfb2c4, #c0aab5)", transition: "width 1s" }} />
+              </div>
+            </div>
+
             <div style={s.grid4} className="grid-4">
               {[
-                { label: "PATRIMONIO ESTIMADO", value: fmtARS((currentValueUSD + totalColdWalletUSD) * usdtArs + totalCocosARS), sub: fmtUSD(currentValueUSD + totalColdWalletUSD + (totalCocosARS / (usdtArs || 1200))), accent: "#a29ea8" },
-                { label: "WALLET FRIA GLOBAL", value: fmtUSD(totalColdWalletUSD), sub: "BTCB, ETH, XRP, AVAX, BNB", accent: "#c0aab5" },
-                { label: "BTC VALOR ACTUAL (COMPRAS)", value: fmtUSD(currentValueUSD), sub: fmt(totalBTC, 6) + " ₿", accent: "#dfb2c4" },
-                { label: "COCOS INVERTIDO", value: fmtARS(totalCocosARS), sub: cocosInvestments.length + " activos", accent: "#a8b6c4" },
+                { label: "PATRIMONIO TOTAL", value: dashCurrency === "ARS" ? fmtARS(totalNetWorthARS) : fmtUSD(totalNetWorthUSD), sub: dashCurrency === "ARS" ? fmtUSD(totalNetWorthUSD) : fmtARS(totalNetWorthARS), accent: "#a29ea8" },
+                { label: "BTC COMPRAS", value: fmtUSD(currentValueUSD), sub: fmtBTC(totalBTC), accent: "#dfb2c4" },
+                { label: "COCOS + WALLET FRÍA", value: fmtUSD(totalCocosUSD + totalColdWalletUSD), sub: "Diversificación", accent: "#a8b6c4" },
                  {
-                  label: "P&L HISTÓRICO BTC",
-                  value: (isPnlPos ? "+" : "") + fmtUSD(pnlUSD),
-                  sub: (isPnlPos ? "▲" : "▼") + " " + fmt(Math.abs(pnlPct), 1) + "%",
-                  accent: isPnlPos ? "#9fb5a6" : "#d99494"
+                  label: "INGRESOS PASIVOS (AIRDROPS/ETC)",
+                  value: fmtUSD(passiveIncome),
+                  sub: "Dinero extra",
+                  accent: "#9fb5a6"
                 },
               ].map((c, i) => (
                 <div key={i} style={s.statCard(c.accent)} className="stat-card">
@@ -521,6 +595,39 @@ export default function BTCTracker() {
                 </div>
               ))}
             </div>
+
+            <div style={s.grid2} className="grid-2">
+              <div style={{...s.card, padding: "20px 10px 10px 10px"}}>
+                <div style={{...s.sectionTitle, paddingLeft: 10}}><span style={{ color: "#a8b6c4" }}>◈</span> DIVERSIFICACIÓN DEL PORTAFOLIO</div>
+                <ResponsiveContainer width="100%" height={280}>
+                  <PieChart>
+                    <Pie data={donutData} innerRadius={80} outerRadius={100} paddingAngle={3} dataKey="value" stroke="none">
+                      {donutData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} />)}
+                    </Pie>
+                    <Tooltip content={<CustomTooltip />} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+              <div style={{...s.card, padding: "20px 10px 10px 10px"}}>
+                <div style={{...s.sectionTitle, paddingLeft: 10}}><span style={{ color: "#c0aab5" }}>◈</span> HISTÓRICO DE RIQUEZA (TUS FOTOS)</div>
+                <ResponsiveContainer width="100%" height={280}>
+                  <AreaChart data={netWorthHistory}>
+                    <defs>
+                      <linearGradient id="gNW" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#c0aab5" stopOpacity={0.4}/>
+                        <stop offset="95%" stopColor="#c0aab5" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#ece9ea" vertical={false} />
+                    <XAxis dataKey="date" tick={{ fill: "#968f92", fontSize: 11, fontWeight: 600 }} axisLine={false} tickLine={false} dy={10} minTickGap={20} />
+                    <YAxis tick={{ fill: "#968f92", fontSize: 11, fontWeight: 600 }} axisLine={false} tickLine={false} tickFormatter={v => "$" + (v/1000).toFixed(0) + "k"} dx={-10} width={45} />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Area type="monotone" dataKey="netWorthUSD" name="Net Worth (USD)" stroke="#c0aab5" fill="url(#gNW)" strokeWidth={3} activeDot={{ r: 6 }} />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
 
             <div style={s.sectionTitle}><span style={{ color: "#dfb2c4" }}>◈</span> MÉTRICAS BITCOIN</div>
             <div style={s.grid4} className="grid-4">
@@ -667,9 +774,17 @@ export default function BTCTracker() {
         {/* WALLET FRIA */}
         {tab === "wallet fria" && (
           <>
+            
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }} className="title-bar">
               <div style={{...s.sectionTitle, marginBottom: 0}}><span style={{ color: "#c0aab5" }}>◈</span> WALLET FRÍA (HOLD SÓLIDO)</div>
+              <button style={{...s.addCocosBtn, background: "linear-gradient(135deg, #a0bfa9, #889e8f)"}} onClick={() => {
+                const val = prompt("¿Cuántos USD totales has ganado de ingresos pasivos (Airdrops, Staking, Dividendos)?", passiveIncome);
+                if(val !== null && !isNaN(val)) setPassiveIncome(Number(val));
+              }}>
+                🎁 INGRESOS PASIVOS
+              </button>
             </div>
+
             
             <div style={s.grid4} className="grid-4">
               <div style={s.statCard("#c0aab5")} className="stat-card">
