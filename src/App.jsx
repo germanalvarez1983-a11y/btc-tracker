@@ -244,15 +244,15 @@ export default function BTCTracker() {
       transition: "all 0.2s",
     }),
     priceBar: {
-      display: "flex", alignItems: "center", gap: 16,
+      display: "flex", alignItems: "center", gap: 6, paddingRight: 4,
     },
     priceChip: (color) => ({
       display: "flex", flexDirection: "column", alignItems: "flex-end",
       background: "#fff", border: `1px solid #e2e8f0`,
-      borderRadius: 8, padding: "6px 12px", minWidth: 110,
+      borderRadius: 6, padding: "4px 8px", minWidth: 70,
     }),
-    priceLabel: { fontSize: 10, color: "#64748b", letterSpacing: 1, fontWeight: 600 },
-    priceValue: (color) => ({ fontSize: 15, fontWeight: 800, color, lineHeight: 1.2 }),
+    priceLabel: { fontSize: 9, color: "#64748b", letterSpacing: 0.5, fontWeight: 700 },
+    priceValue: (color) => ({ fontSize: 13, fontWeight: 800, color, lineHeight: 1.2 }),
     priceSub: (pos) => ({ fontSize: 10, color: pos ? "#16a34a" : "#dc2626", fontWeight: 600 }),
     statusDot: (status) => ({
       width: 7, height: 7, borderRadius: "50%",
@@ -374,7 +374,7 @@ export default function BTCTracker() {
         @media (max-width: 768px) {
           .app-header { flex-direction: column !important; padding: 16px !important; gap: 16px !important; }
           .app-nav { width: 100% !important; justify-content: center !important; flex-wrap: wrap !important; }
-          .price-bar { width: 100% !important; justify-content: space-between !important; overflow-x: auto; padding-bottom: 8px; }
+          .price-bar { width: 100% !important; justify-content: center !important; flex-wrap: wrap !important; padding-bottom: 8px; gap: 6px !important; }
           .app-content { padding: 16px !important; }
           .grid-4, .grid-2 { grid-template-columns: 1fr !important; }
           .title-bar { flex-direction: column !important; align-items: flex-start !important; gap: 12px !important; }
@@ -399,11 +399,13 @@ export default function BTCTracker() {
           ))}
         </nav>
         <div style={s.priceBar} className="price-bar">
-          <div style={{ display: "flex", alignItems: "center", gap: 6, minWidth: "max-content" }}>
-            <span style={s.statusDot(priceStatus)} />
-            <span style={{ fontSize: 10, color: "#64748b", letterSpacing: 0.5, fontWeight: 600 }}>
-              {priceStatus === "live" ? (lastUpdated ? `${lastUpdated.toLocaleTimeString("es-AR")}` : "LIVE") : priceStatus === "loading" ? "ACTUALIZANDO..." : "ERROR"}
-            </span>
+          <div style={{ display: "flex", alignItems: "center", gap: 4, minWidth: "max-content" }}>
+            <span style={s.statusDot(priceStatus)} title={lastUpdated ? "Última act: " + lastUpdated.toLocaleTimeString("es-AR") : ""} />
+            {priceStatus !== "live" && (
+              <span style={{ fontSize: 9, color: "#64748b", letterSpacing: 0.5, fontWeight: 600 }}>
+                {priceStatus === "loading" ? "ACT." : "ERROR"}
+              </span>
+            )}
           </div>
           <div style={{...s.priceChip("#f59e0b"), minWidth: "max-content"}}>
             <span style={s.priceLabel}>BTC</span>
@@ -431,7 +433,7 @@ export default function BTCTracker() {
           </div>
           <button
             onClick={fetchPrices}
-            style={{ background: "#f1f5f9", border: "1px solid #e2e8f0", color: "#475569", borderRadius: 8, padding: "8px 12px", cursor: "pointer", fontSize: 14, fontWeight: "bold", fontFamily: "inherit", transition: "all 0.2s" }}
+            style={{ background: "#f1f5f9", border: "1px solid #e2e8f0", color: "#475569", borderRadius: 6, padding: "4px 8px", cursor: "pointer", fontSize: 14, fontWeight: "bold", fontFamily: "inherit", transition: "all 0.2s" }}
             title="Actualizar precios"
           >⟳</button>
         </div>
