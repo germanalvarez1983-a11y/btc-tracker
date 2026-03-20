@@ -526,11 +526,6 @@ export default function BTCTracker() {
             
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }} className="title-bar">
               <div style={s.sectionTitle}><span style={{ color: "#a29ea8" }}>◈</span> RESUMEN GLOBAL</div>
-              <div style={{ display: "flex", gap: 10 }}>
-                <button style={{...s.addBtn, background: "linear-gradient(135deg, #a8b6c4, #89858f)"}} onClick={() => setDashCurrency(c => c === "ARS" ? "USD" : "ARS")}>
-                  VER EN {dashCurrency === "ARS" ? "USD" : "ARS"}
-                </button>
-              </div>
             </div>
 
             {/* AVG PRICE BANNER (Replaces old progress bar) */}
