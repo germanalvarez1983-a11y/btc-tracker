@@ -7,7 +7,15 @@ import {
 const MONTHS_ES = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
 
 let HIDE_BALANCES = false;
-const initialData = [];
+const initialData = [
+  { id: 1, date: "2025-10-05", arsInvested: 147176.09, btcPrice: 157239.42, usdRate: 1200 },
+  { id: 2, date: "2025-10-18", arsInvested: 4762938.29, btcPrice: 107244.4, usdRate: 1200 },
+  { id: 3, date: "2025-11-03", arsInvested: 148456.91, btcPrice: 133025.90, usdRate: 1200 },
+  { id: 4, date: "2025-12-06", arsInvested: 149557.81, btcPrice: 112280.64, usdRate: 1200 },
+  { id: 5, date: "2026-01-07", arsInvested: 154698.87, btcPrice: 92523.24, usdRate: 1520 },
+  { id: 6, date: "2026-03-02", arsInvested: 149815.33, btcPrice: 66596.43, usdRate: 1520 },
+  { id: 7, date: "2026-03-10", arsInvested: 155551.02, btcPrice: 70576.69, usdRate: 1520 }
+];
 const initialCocos = [];
 
 const BTC_CURRENT_PRICE = 0;
@@ -36,36 +44,7 @@ const CustomTooltip = ({ active, payload, label }) => {
           {p.name}: <strong>{typeof p.value === "number" ? fmt(p.value) : p.value}</strong>
         </div>
       ))}
-    
-      {/* MODAL COLD WALLET */}
-      {editColdTicker && (
-        <div style={s.modal} onClick={e => e.target === e.currentTarget && setEditColdTicker(null)}>
-          <div style={s.modalBox} className="modal-box">
-            <div style={{ fontSize: 16, fontWeight: 800, color: "#4a4144", marginBottom: 24, letterSpacing: 1 }}>
-              ✎ ACTUALIZAR SALDO DE {editColdTicker}
-            </div>
-            <div style={{ display: "grid", gap: 16 }}>
-              <div>
-                <label style={s.label}>INGRESA TU BALANCE MANUAL EXACTO (CANTIDAD DE MONEDAS)</label>
-                <input
-                  style={s.input}
-                  type="number"
-                  placeholder={`Ej: ${editColdTicker === "BTC" ? "0.15" : "120"}`}
-                  value={editColdAmount}
-                  onChange={e => setEditColdAmount(e.target.value)}
-                />
-              </div>
-            </div>
-            <button style={{...s.saveBtn, background: "linear-gradient(135deg, #c0aab5, #968f92)", boxShadow: "0 4px 6px rgba(192, 170, 181, 0.2)"}} onClick={() => {
-              setColdWallet(prev => ({ ...prev, [editColdTicker]: Number(editColdAmount) }));
-              setEditColdTicker(null);
-            }}>
-              GUARDAR BALANCE
-            </button>
-            <button style={s.cancelBtn} onClick={() => setEditColdTicker(null)}>CANCELAR</button>
-          </div>
-        </div>
-      )}
+
 
     </div>
   );
@@ -74,7 +53,8 @@ const CustomTooltip = ({ active, payload, label }) => {
 export default function BTCTracker() {
   const [purchases, setPurchases] = useState(() => {
     const saved = localStorage.getItem("btc-tracker-purchases");
-    return saved ? JSON.parse(saved) : initialData;
+    const parsed = saved ? JSON.parse(saved) : [];
+    return parsed.length > 0 ? parsed : initialData;
   });
   const [coldWallet, setColdWallet] = useState(() => {
     const saved = localStorage.getItem("btc-tracker-coldwallet");
@@ -971,6 +951,35 @@ export default function BTCTracker() {
             </div>
             <button style={{...s.saveBtn, background: "linear-gradient(135deg, #a8b6c4, #89858f)", boxShadow: "0 4px 6px rgba(137, 133, 143, 0.2)"}} onClick={saveCocosForm}>GUARDAR EN COCOS</button>
             <button style={s.cancelBtn} onClick={() => setShowCocosModal(false)}>CANCELAR</button>
+          </div>
+        </div>
+      )}
+      {/* MODAL COLD WALLET */}
+      {editColdTicker && (
+        <div style={s.modal} onClick={e => e.target === e.currentTarget && setEditColdTicker(null)}>
+          <div style={s.modalBox} className="modal-box">
+            <div style={{ fontSize: 16, fontWeight: 800, color: "#4a4144", marginBottom: 24, letterSpacing: 1 }}>
+               ACTUALIZAR SALDO DE {editColdTicker}
+            </div>
+            <div style={{ display: "grid", gap: 16 }}>
+              <div>
+                <label style={s.label}>INGRESA TU BALANCE MANUAL EXACTO (CANTIDAD DE MONEDAS)</label>
+                <input
+                  style={s.input}
+                  type="number"
+                  placeholder={`Ej: ${editColdTicker === "BTC" ? "0.15" : "120"}`}
+                  value={editColdAmount}
+                  onChange={e => setEditColdAmount(e.target.value)}
+                />
+              </div>
+            </div>
+            <button style={{...s.saveBtn, background: "linear-gradient(135deg, #c0aab5, #968f92)", boxShadow: "0 4px 6px rgba(192, 170, 181, 0.2)"}} onClick={() => {
+              setColdWallet(prev => ({ ...prev, [editColdTicker]: Number(editColdAmount) }));
+              setEditColdTicker(null);
+            }}>
+              GUARDAR BALANCE
+            </button>
+            <button style={s.cancelBtn} onClick={() => setEditColdTicker(null)}>CANCELAR</button>
           </div>
         </div>
       )}
