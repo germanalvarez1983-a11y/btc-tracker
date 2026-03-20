@@ -478,9 +478,6 @@ export default function BTCTracker() {
         </div>
         
         <div style={{display: "flex", gap: 8, alignItems: "center"}}>
-          <button onClick={() => setHideBalances(!hideBalances)} style={{ ...s.iconBtn, fontSize: 18, marginRight: 10 }} title={"Modo Privacidad"}>
-            {hideBalances ? "🙈" : "👁️"}
-          </button>
           <nav style={s.nav} className="app-nav">
 
           {["dashboard","compras BTC","cocos", "wallet fria", "graficos"].map(t => (
@@ -503,12 +500,6 @@ export default function BTCTracker() {
             <span style={s.priceLabel}>BTC</span>
             <span style={s.priceValue("#c98298")}>
               {btcPrice > 0 ? "$" + btcPrice.toLocaleString("es-AR", { maximumFractionDigits: 0 }) : "—"}
-            </span>
-          </div>
-          <div style={{...s.priceChip("#a8b6c4"), minWidth: "max-content"}}>
-            <span style={s.priceLabel}>USDT (Crypto)</span>
-            <span style={s.priceValue("#8f9fb0")}>
-              {usdtArs > 0 ? "$" + usdtArs.toLocaleString("es-AR", { maximumFractionDigits: 0 }) : "—"}
             </span>
           </div>
           <div style={{...s.priceChip("#9fb5a6"), minWidth: "max-content"}}>
@@ -538,9 +529,6 @@ export default function BTCTracker() {
               <div style={{ display: "flex", gap: 10 }}>
                 <button style={{...s.addBtn, background: "linear-gradient(135deg, #a8b6c4, #89858f)"}} onClick={() => setDashCurrency(c => c === "ARS" ? "USD" : "ARS")}>
                   VER EN {dashCurrency === "ARS" ? "USD" : "ARS"}
-                </button>
-                <button style={{...s.addCocosBtn, background: "linear-gradient(135deg, #dfb2c4, #c98298)"}} onClick={takeSnapshot}>
-                  📸 FOTO DEL MES
                 </button>
               </div>
             </div>
