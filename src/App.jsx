@@ -59,6 +59,8 @@ export default function BTCTracker() {
   const [btcPrice, setBtcPrice] = useState(BTC_CURRENT_PRICE);
   const [usdtArs, setUsdtArs] = useState(0);
   const [btcChange24h, setBtcChange24h] = useState(0);
+  const [dolarOficial, setDolarOficial] = useState(0);
+  const [dolarBlue, setDolarBlue] = useState(0);
   const [lastUpdated, setLastUpdated] = useState(null);
   const [priceStatus, setPriceStatus] = useState("loading"); // "loading" | "live" | "error"
   
@@ -73,15 +75,23 @@ export default function BTCTracker() {
   async function fetchPrices() {
     try {
       setPriceStatus("loading");
-      const [btcRes, usdtRes] = await Promise.all([
+      const [btcRes, usdtRes, dolarRes] = await Promise.all([
         fetch("https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT"),
         fetch("https://api.binance.com/api/v3/ticker/24hr?symbol=USDTARS"),
+        fetch("https://dolarapi.com/v1/dolares").catch(() => null),
       ]);
       const btcData = await btcRes.json();
       const usdtData = await usdtRes.json();
       setBtcPrice(parseFloat(btcData.lastPrice));
       setBtcChange24h(parseFloat(btcData.priceChangePercent));
       setUsdtArs(parseFloat(usdtData.lastPrice));
+      if (dolarRes && dolarRes.ok) {
+        const dData = await dolarRes.json();
+        const oficial = dData.find((d) => d.casa === "oficial");
+        const blue = dData.find((d) => d.casa === "blue");
+        if (oficial) setDolarOficial(oficial.venta);
+        if (blue) setDolarBlue(blue.venta);
+      }
       setLastUpdated(new Date());
       setPriceStatus("live");
     } catch (e) {
@@ -402,9 +412,21 @@ export default function BTCTracker() {
             </span>
           </div>
           <div style={{...s.priceChip("#0ea5e9"), minWidth: "max-content"}}>
-            <span style={s.priceLabel}>USDT</span>
+            <span style={s.priceLabel}>USDT (Crypto)</span>
             <span style={s.priceValue("#0284c7")}>
               {usdtArs > 0 ? "$" + usdtArs.toLocaleString("es-AR", { maximumFractionDigits: 0 }) : "—"}
+            </span>
+          </div>
+          <div style={{...s.priceChip("#16a34a"), minWidth: "max-content"}}>
+            <span style={s.priceLabel}>USD Blue</span>
+            <span style={s.priceValue("#15803d")}>
+              {dolarBlue > 0 ? "$" + dolarBlue.toLocaleString("es-AR", { maximumFractionDigits: 0 }) : "—"}
+            </span>
+          </div>
+          <div style={{...s.priceChip("#64748b"), minWidth: "max-content"}}>
+            <span style={s.priceLabel}>USD Oficial</span>
+            <span style={s.priceValue("#475569")}>
+              {dolarOficial > 0 ? "$" + dolarOficial.toLocaleString("es-AR", { maximumFractionDigits: 0 }) : "—"}
             </span>
           </div>
           <button
