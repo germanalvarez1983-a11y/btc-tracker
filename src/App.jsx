@@ -104,6 +104,11 @@ export default function BTCTracker() {
   useEffect(() => {
     localStorage.setItem("btc-tracker-cocos", JSON.stringify(cocosInvestments));
   }, [cocosInvestments]);
+  const [cocosManualBalance, setCocosManualBalance] = useState(() => {
+    const saved = localStorage.getItem("btc-tracker-cocos-bal");
+    return saved ? Number(saved) : 0;
+  });
+  useEffect(() => { localStorage.setItem("btc-tracker-cocos-bal", cocosManualBalance.toString()); }, [cocosManualBalance]);
   const [tab, setTab] = useState("dashboard");
   const [showModal, setShowModal] = useState(false);
   const [showCocosModal, setShowCocosModal] = useState(false);
@@ -208,8 +213,8 @@ export default function BTCTracker() {
   const pnlPct = (pnlUSD / totalUSDInvested) * 100;
   const isPnlPos = pnlUSD >= 0;
 
-  
-  const totalCocosARS = cocosInvestments.reduce((s, c) => s + Number(c.arsInvested), 0);
+  const totalCocosInvestedARS = cocosInvestments.reduce((s, c) => s + Number(c.arsInvested), 0);
+  const totalCocosARS = cocosManualBalance > 0 ? cocosManualBalance : totalCocosInvestedARS;
   const totalCocosUSD = totalCocosARS / (usdtArs || 1200);
   const totalColdWalletUSD = Object.keys(coldWallet).reduce((sum, ticker) => sum + (coldWallet[ticker] * cryptoData[ticker].price), 0);
   
@@ -692,17 +697,43 @@ export default function BTCTracker() {
           <>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }} className="title-bar">
               <div style={{...s.sectionTitle, marginBottom: 0}}><span style={{ color: "#a8b6c4" }}>◈</span> PORTAFOLIO COCOS CAPITAL</div>
-              <button style={s.addCocosBtn} onClick={() => { setCocosEditId(null); setCocosForm({ date: "", ticker: "", arsInvested: "", priceBought: "" }); setShowCocosModal(true); }}>
-                + NUEVA TRANSACCIÓN COCOS
-              </button>
+              <div style={{ display: "flex", gap: 10 }}>
+                <button style={{...s.addBtn, background: "linear-gradient(135deg, #a8b6c4, #89858f)"}} onClick={() => {
+                  const val = prompt("¿Cuál es el valor actual en pesos (ARS) de tu portafolio/FCI en Cocos?", cocosManualBalance || totalCocosInvestedARS);
+                  if (val !== null && !isNaN(val.replace(',', '.'))) setCocosManualBalance(Number(val.replace(',', '.')));
+                }}>
+                  📈 ACTUALIZAR VALOR HOY
+                </button>
+                <button style={s.addCocosBtn} onClick={() => { setCocosEditId(null); setCocosForm({ date: "", ticker: "", arsInvested: "", priceBought: "" }); setShowCocosModal(true); }}>
+                  + NUEVA INVERSIÓN
+                </button>
+              </div>
             </div>
             
             <div style={s.grid4} className="grid-4">
               <div style={s.statCard("#a8b6c4")} className="stat-card">
-                <div style={s.statLabel}>TOTAL INVERTIDO EN COCOS</div>
+                <div style={s.statLabel}>{cocosManualBalance > 0 ? "VALOR DE MERCADO ACTUAL" : "TOTAL INVERTIDO (COSTO)"}</div>
                 <div style={s.statValue()}>{fmtARS(totalCocosARS)}</div>
-                <div style={{...s.statSub, color: "#a8b6c4"}}>{cocosInvestments.length} compras en cartera</div>
+                <div style={{...s.statSub, color: "#a8b6c4"}}>{cocosInvestments.length} inversiones en cartera</div>
               </div>
+              {cocosManualBalance > 0 && cocosManualBalance !== totalCocosInvestedARS && (
+                <div style={s.statCard(cocosManualBalance >= totalCocosInvestedARS ? "#9fb5a6" : "#d99494")} className="stat-card">
+                  <div style={s.statLabel}>RENDIMIENTO ARS</div>
+                  <div style={{...s.statValue(), color: cocosManualBalance >= totalCocosInvestedARS ? "#9fb5a6" : "#d99494" }}>
+                    {cocosManualBalance >= totalCocosInvestedARS ? "+" : ""}{fmtARS(cocosManualBalance - totalCocosInvestedARS)}
+                  </div>
+                  <div style={{...s.statSub, color: cocosManualBalance >= totalCocosInvestedARS ? "#9fb5a6" : "#d99494"}}>
+                    {totalCocosInvestedARS > 0 ? fmt(((cocosManualBalance - totalCocosInvestedARS) / totalCocosInvestedARS) * 100, 2) : 0}% de crecimiento
+                  </div>
+                </div>
+              )}
+              {cocosManualBalance > 0 && (
+                <div style={s.statCard("#dfb2c4")} className="stat-card">
+                  <div style={s.statLabel}>CAPITAL ORIGINAL INVERTIDO</div>
+                  <div style={{...s.statValue(), color: "#3b3235"}}>{fmtARS(totalCocosInvestedARS)}</div>
+                  <div style={{...s.statSub, color: "#dfb2c4"}}>Suma de aportes manuales</div>
+                </div>
+              )}
             </div>
 
             <div style={{...s.card, padding: 0, overflow: "hidden"}}>
