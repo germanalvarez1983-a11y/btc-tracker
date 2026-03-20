@@ -545,14 +545,19 @@ export default function BTCTracker() {
               </div>
             </div>
 
-            {/* PROGRESS BAR 100K GOAL */}
-            <div style={{ background: "#fff", padding: "16px 24px", borderRadius: 12, border: "1px solid #ece9ea", marginBottom: 24, boxShadow: "0 2px 4px rgba(0,0,0,0.02)" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, fontWeight: 800, color: "#968f92", marginBottom: 8, letterSpacing: 1 }}>
-                <span>PROGRESO META: <div style={s.sectionTitle}><span style={{ color: "#dfb2c4" }}>◈</span> MÉTRICAS BITCOIN</div>00.000 USD</span>
-                <span>{fmt((totalNetWorthUSD / 100000) * 100, 1)}%</span>
+            {/* AVG PRICE BANNER (Replaces old progress bar) */}
+            <div style={{ background: "linear-gradient(135deg, #ffffff, #fcfbfb)", border: "1px solid #ece9ea", borderLeft: "6px solid #dfb2c4", borderRadius: 12, padding: "20px 24px", marginBottom: 24, boxShadow: "0 2px 6px rgba(0,0,0,0.02)", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 16 }}>
+              <div>
+                <div style={{ fontSize: 11, color: "#968f92", letterSpacing: 1, fontWeight: 700, marginBottom: 4 }}>PRECIO PROMEDIO DE COMPRA BTC</div>
+                <div style={{ fontSize: 28, fontWeight: 800, color: "#3b3235", lineHeight: 1 }}>{fmtUSD(avgBuyPrice)}</div>
+                <div style={{ fontSize: 12, color: "#a29ea8", fontWeight: 600, marginTop: 4 }}>Basado en tu historial de compras BTC</div>
               </div>
-              <div style={{ width: "100%", height: 10, background: "#ece9ea", borderRadius: 5, overflow: "hidden" }}>
-                <div style={{ height: "100%", width: `${Math.min((totalNetWorthUSD / 100000) * 100, 100)}%`, background: "linear-gradient(90deg, #dfb2c4, #c0aab5)", transition: "width 1s" }} />
+              <div style={{ textAlign: "right" }}>
+                <div style={{ fontSize: 11, color: "#968f92", letterSpacing: 1, fontWeight: 700, marginBottom: 4 }}>PRECIO HOY (MARKET)</div>
+                <div style={{ fontSize: 20, fontWeight: 800, color: "#c98298" }}>{fmtUSD(btcPrice)}</div>
+                <div style={{ fontSize: 12, color: btcPrice >= avgBuyPrice ? "#9fb5a6" : "#d99494", fontWeight: 700, marginTop: 4 }}>
+                  {btcPrice >= avgBuyPrice ? "Estás en ganancias ▲" : "Estás en pérdida ▼"}
+                </div>
               </div>
             </div>
 
