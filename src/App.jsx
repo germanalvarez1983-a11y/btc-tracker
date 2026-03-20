@@ -58,7 +58,8 @@ export default function BTCTracker() {
   });
   const [coldWallet, setColdWallet] = useState(() => {
     const saved = localStorage.getItem("btc-tracker-coldwallet");
-    return saved ? JSON.parse(saved) : { BTC: 0, ETH: 0, XRP: 0, AVAX: 0, BNB: 0 };
+    const parsed = saved ? JSON.parse(saved) : {};
+    return { BTC: 0, ETH: 0, XRP: 0, AVAX: 0, BNB: 0, ...parsed };
   });
   useEffect(() => {
     localStorage.setItem("btc-tracker-coldwallet", JSON.stringify(coldWallet));
@@ -954,10 +955,10 @@ export default function BTCTracker() {
                 <label style={s.label}>INGRESA TU BALANCE MANUAL EXACTO (CANTIDAD DE MONEDAS)</label>
                 <input
                   style={s.input}
-                  type="number"
+                  type="text"
                   placeholder={`Ej: ${editColdTicker === "BTC" ? "0.15" : "120"}`}
                   value={editColdAmount}
-                  onChange={e => setEditColdAmount(e.target.value)}
+                  onChange={e => setEditColdAmount(e.target.value.replace(",", "."))}
                 />
               </div>
             </div>
